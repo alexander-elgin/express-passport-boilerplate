@@ -1,0 +1,29 @@
+{
+  "name": "express-es6-mongoose-passport",
+  "version": "1.0.0",
+  "description": "Express.js ES6 Mongoose Passport boilerplate",
+  "main": "index.js",
+  "engines": {
+    "npm": ">=3",
+    "node": ">=6.5"
+  },
+  "scripts": {
+    "start": "node --use_strict index.js",
+    "dev": "nodemon --use_strict index.js"
+  },
+  "author": "Alex Elgin <sascha.elgin@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "jsonwebtoken": "^7.4.1",
+    "mongoose": "^4.10.4",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "validator": "^7.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
