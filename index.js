@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const morgan  = require('morgan');
 const passport = require('passport');
 const config = require('./config');
 
@@ -7,6 +8,7 @@ const config = require('./config');
 require('./server/models').connect(config.dbUri);
 
 const app = express();
+app.use(morgan('dev'));
 // tell the app to look for static files in these directories
 app.use(express.static('./server/static/'));
 app.use(express.static('./client/dist/'));
