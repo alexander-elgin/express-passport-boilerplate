@@ -11,35 +11,22 @@ const router = new express.Router();
  * @returns {object} The result of validation. Object contains a boolean validation result,
  *                   errors tips, and a global message for the whole form.
  */
-function validateSignupForm(payload) {
-  const errors = {};
-  let isFormValid = true;
-  let message = '';
+function validateSignUpForm(payload) {
+  const errors = validateBasicSignInSignUpForm(payload);
 
-  if (!payload || typeof payload.email !== 'string' || !validator.isEmail(payload.email)) {
-    isFormValid = false;
-    errors.email = 'Please provide a correct email address.';
+  if (!payload || (typeof payload.name !== 'string') || !/^[a-zA-Z]+([\-\s]?[a-zA-Z]+)*$/.test(payload.name.trim())) {
+    errors.name = {
+      code: 'INVALID_NAME'
+    };
   }
 
   if (!payload || typeof payload.password !== 'string' || payload.password.trim().length < 8) {
-    isFormValid = false;
-    errors.password = 'Password must have at least 8 characters.';
+    errors.password = {
+      code: 'INVALID_PASSWORD'
+    };
   }
 
-  if (!payload || typeof payload.name !== 'string' || payload.name.trim().length === 0) {
-    isFormValid = false;
-    errors.name = 'Please provide your name.';
-  }
-
-  if (!isFormValid) {
-    message = 'Check the form for errors.';
-  }
-
-  return {
-    success: isFormValid,
-    message,
-    errors
-  };
+  return errors;
 }
 
 /**
@@ -49,102 +36,80 @@ function validateSignupForm(payload) {
  * @returns {object} The result of validation. Object contains a boolean validation result,
  *                   errors tips, and a global message for the whole form.
  */
-function validateLoginForm(payload) {
-  const errors = {};
-  let isFormValid = true;
-  let message = '';
-
-  if (!payload || typeof payload.email !== 'string' || payload.email.trim().length === 0) {
-    isFormValid = false;
-    errors.email = 'Please provide your email address.';
-  }
+function validateSignInForm(payload) {
+  const errors = validateBasicSignInSignUpForm(payload);
 
   if (!payload || typeof payload.password !== 'string' || payload.password.trim().length === 0) {
-    isFormValid = false;
-    errors.password = 'Please provide your password.';
+    errors.password = {
+      code: 'EMPTY_PASSWORD'
+    };
   }
 
-  if (!isFormValid) {
-    message = 'Check the form for errors.';
+  return errors;
+}
+
+function validateBasicSignInSignUpForm(payload) {
+  const errors = {};
+
+  if (!payload || typeof payload.email !== 'string' || !validator.isEmail(payload.email.trim())) {
+    errors.email = {
+      code: 'INVALID_EMAIL'
+    };
   }
 
-  return {
-    success: isFormValid,
-    message,
-    errors
-  };
+  return errors;
 }
 
 router.post('/signup', (req, res, next) => {
-  const validationResult = validateSignupForm(req.body);
-  if (!validationResult.success) {
-    return res.status(400).json({
-      success: false,
-      message: validationResult.message,
-      errors: validationResult.errors
-    });
-  }
+  const validationErrors = validateSignUpForm(req.body);
 
+  if (Object.keys(validationErrors).length > 0) {
+    return res.json({ errors: validationErrors });
+  }
 
   return passport.authenticate('local-signup', (err) => {
     if (err) {
       if (err.name === 'MongoError' && err.code === 11000) {
         // the 11000 Mongo code is for a duplication email error
-        // the 409 HTTP status code is for conflict error
-        return res.status(409).json({
-          success: false,
-          message: 'Check the form for errors.',
+        return res.json({
           errors: {
-            email: 'This email is already taken.'
+            email: 'DUPLICATED_EMAIL'
           }
         });
       }
 
-      return res.status(400).json({
-        success: false,
-        message: 'Could not process the form.'
+      return res.json({
+        errors: {
+          '': 'FORM_SUBMISSION_FAILED'
+        }
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: 'You have successfully signed up! Now you should be able to log in.'
-    });
+    return res.json({});
   })(req, res, next);
 });
 
-router.post('/login', (req, res, next) => {
-  const validationResult = validateLoginForm(req.body);
-  if (!validationResult.success) {
-    return res.status(400).json({
-      success: false,
-      message: validationResult.message,
-      errors: validationResult.errors
-    });
+router.post('/signin', (req, res, next) => {
+  const validationErrors = validateSignInForm(req.body);
+
+  if (Object.keys(validationErrors).length > 0) {
+    return res.json({ errors: validationErrors });
   }
 
-
-  return passport.authenticate('local-login', (err, token, userData) => {
-    if (err) {
-      if (err.name === 'IncorrectCredentialsError') {
-        return res.status(400).json({
-          success: false,
-          message: err.message
-        });
-      }
-
-      return res.status(400).json({
-        success: false,
-        message: 'Could not process the form.'
+  return passport.authenticate('local-login', (error, token, userData) => {
+    if (error !== null) {
+      return res.json({
+        errors: {
+          [error.code === 'INCORRECT_CREDENTIALS' ? 'password' : '']: error
+        }
       });
     }
 
-
     return res.json({
-      success: true,
-      message: 'You have successfully logged in!',
-      token,
-      user: userData
+      payload: {
+        token,
+        user: userData
+      }
     });
   })(req, res, next);
 });
