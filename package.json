@@ -1,8 +1,18 @@
 {
-  "name": "express-es6-mongoose-passport",
+  "name": "express-passport-boilerplate",
   "version": "1.0.0",
-  "description": "Express.js ES6 Mongoose Passport boilerplate",
-  "main": "index.js",
+  "description": "Express Passport boilerplate",
+  "keywords": [
+    "express",
+    "passport",
+    "mongoose",
+    "es6",
+    "boilerplate"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/alexander-elgin/express-passport-boilerplate.git"
+  },
   "engines": {
     "npm": ">=3",
     "node": ">=6.5"
@@ -12,7 +22,7 @@
     "dev": "nodemon --use_strict index.js"
   },
   "author": "Alex Elgin <sascha.elgin@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.2",

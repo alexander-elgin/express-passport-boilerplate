@@ -1,20 +1,25 @@
 # Express.js ES6 Mongoose Passport boilerplate
 
-An example back-end application that stores user data.
+A HTTP server (back end only) with DB support & auth features 
 
-This application incorporates the following packages:
-
-- bcryptjs
-- jsonwebtoken
+## Main Features
+- es6
+- express
 - mongoose
 - passport
 - validator
 
-## Installation
+## Dependencies
+- Node.js
+- npm OR yarn
+- MongoDB
 
+## Install
 ```sh
 $ yarn install
 ```
+
+## Launch
 ```sh
 $ yarn run dev
 ```
