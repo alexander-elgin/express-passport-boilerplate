@@ -1,23 +1,29 @@
 import { Strategy as PassportLocalStrategy } from 'passport-local';
+import {
+  genSalt,
+  hash,
+} from 'bcryptjs';
 
-const getStrategy = (User) => new PassportLocalStrategy({
+const getStrategy = (connection) => new PassportLocalStrategy({
   usernameField: 'email',
   passwordField: 'password',
   session: false,
   passReqToCallback: true
 }, async (req, email, password, done) => {
-  const newUser = new User({
-    email: email.trim(),
-    password: password.trim(),
-    name: req.body.name.trim(),
-  });
-
   try {
-    await newUser.save();
-    done(null);
-  } catch (err) {
-    console.error(err);
-    done(err);
+    const salt = await genSalt();
+    const hashCode = await hash(password.trim(), salt);
+    const values = [email.trim(), req.body.name.trim(), hashCode];
+
+    connection.query(`INSERT INTO users ( email, name, password ) values ("${values.join('", "')}")`, (err) => {
+      if (err) {
+        return done(err);
+      }
+
+      done(null);
+    });
+  } catch (e) {
+    done(e);
   }
 });
 

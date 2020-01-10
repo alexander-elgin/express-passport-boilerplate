@@ -69,7 +69,7 @@ router.post('/signup', (req, res, next) => {
 
   return passport.authenticate('local-signup', (err) => {
     if (err) {
-      const { field, code } = err.name === 'MongoError' && err.code === 11000
+      const { field, code } = err.code === 'ER_DUP_ENTRY' && err.errno === 1062
           ? { field: 'email', code: 'DUPLICATED_EMAIL' }
           : { field: '', code: 'FORM_SUBMISSION_FAILED' };
 
@@ -78,7 +78,7 @@ router.post('/signup', (req, res, next) => {
       });
     }
 
-    return res.json({});
+    res.json({});
   })(req, res, next);
 });
 
@@ -98,7 +98,7 @@ router.post('/signin', (req, res, next) => {
       });
     }
 
-    return res.json({
+    res.json({
       payload: {
         token,
         user,

@@ -1,4 +1,7 @@
 {
-  "dbUri": "mongodb://localhost/react_passport",
+  "dbHost":  "localhost",
+  "dbName":  "auth",
+  "dbPassword":  "solution",
+  "dbUser":  "isoft",
   "jwtSecret": "a secret phrase!!"
 }
