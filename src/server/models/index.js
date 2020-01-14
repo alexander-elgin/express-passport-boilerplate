@@ -3,7 +3,11 @@ import mongoose from 'mongoose';
 import UserSchema from './schemas/user';
 
 const connect = (uri) => {
-  mongoose.connect(uri, {useMongoClient: true});
+  mongoose.connect(uri, {
+      useCreateIndex: true,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+  });
   mongoose.Promise = global.Promise;
 
   mongoose.connection.on('error', (err) => {
