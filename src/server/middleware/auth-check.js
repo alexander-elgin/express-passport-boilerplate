@@ -27,7 +27,7 @@ module.exports = (req, res, next) => {
         return res.status(401).end();
       }
       // pass user details onto next route
-      req.user = user
+      req.user = user;
       return next();
     });
   });

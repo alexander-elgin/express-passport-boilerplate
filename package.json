@@ -18,8 +18,8 @@
     "node": ">=6.5"
   },
   "scripts": {
-    "start": "babel-node --use_strict ./index.js",
-    "dev": "nodemon --exec babel-node --use_strict ./index.js"
+    "start": "babel-node --use_strict ./src/index.js",
+    "dev": "nodemon --exec babel-node --use_strict ./src/index.js"
   },
   "author": "Alex Elgin <sascha.elgin@gmail.com>",
   "license": "MIT",
