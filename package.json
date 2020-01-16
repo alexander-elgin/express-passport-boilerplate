@@ -18,8 +18,8 @@
     "node": ">=6.5"
   },
   "scripts": {
-    "start": "node --use_strict index.js",
-    "dev": "nodemon --use_strict index.js"
+    "start": "babel-node --use_strict ./index.js",
+    "dev": "nodemon --exec babel-node --use_strict ./index.js"
   },
   "author": "Alex Elgin <sascha.elgin@gmail.com>",
   "license": "MIT",
@@ -36,6 +36,10 @@
     "validator": "^7.0.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.3",
+    "@babel/node": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
     "nodemon": "^1.11.0"
   }
 }
