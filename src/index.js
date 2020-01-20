@@ -1,41 +1,32 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const morgan  = require('morgan');
-const passport = require('passport');
-const config = require('./config');
+import express from 'express';
+import cors  from 'cors';
+import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
+import morgan from 'morgan';
+import passport from 'passport';
 
-// connect to the database and load models
-require('./server/models').connect(config.dbUri);
+import config from './config';
+import connect from './server/models';
+import authRoutes from './server/routes/auth';
+import authCheckMiddleware from './server/middleware/auth-check';
+import getLocalSignupStrategy from './server/passport/local-signup';
+import getLocalLoginStrategy from './server/passport/local-login';
+
+connect(config.dbUri);
 
 const app = express();
 app.use(morgan('dev'));
 app.use(cors());
-// tell the app to look for static files in these directories
 app.use(express.static('./server/static/'));
-app.use(express.static('./client/dist/'));
-// tell the app to parse HTTP body messages
 app.use(bodyParser.json());
-// pass the passport middleware
+
+const User = mongoose.model('User');
 app.use(passport.initialize());
+passport.use('local-signup', getLocalSignupStrategy(User));
+passport.use('local-login', getLocalLoginStrategy(User));
 
-// load passport strategies
-const localSignupStrategy = require('./server/passport/local-signup');
-const localLoginStrategy = require('./server/passport/local-login');
-passport.use('local-signup', localSignupStrategy);
-passport.use('local-login', localLoginStrategy);
-
-// pass the authenticaion checker middleware
-const authCheckMiddleware = require('./server/middleware/auth-check');
 app.use('/api', authCheckMiddleware);
+app.use('/auth', authRoutes);
 
-// routes
-app.use('/auth', require('./server/routes/auth'));
-
-// Set Port, hosting services will look for process.env.PORT
 app.set('port', (process.env.PORT || 8000));
-
-// start the server
-app.listen(app.get('port'), () => {
-  console.log(`Server is running on port ${app.get('port')}`);
-});
+app.listen(app.get('port'), () => console.log(`Server is running on port ${app.get('port')}`));

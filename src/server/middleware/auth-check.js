@@ -1,34 +1,36 @@
-const jwt = require('jsonwebtoken');
-const User = require('mongoose').model('User');
-const config = require('../../config');
+import mongoose from 'mongoose';
+import { verify } from 'jsonwebtoken';
 
+import { jwtSecret } from '../../config';
 
-/**
- *  The Auth Checker middleware function.
- */
-module.exports = (req, res, next) => {
+const checkAuth = (req, res, next) => {
+  const unauthorized = () => res.status(401).end();
+
   if (!req.headers.authorization) {
-    return res.status(401).end();
+    return unauthorized();
   }
 
-  // get the last part from a authorization header string like "bearer token-value"
   const token = req.headers.authorization.split(' ')[1];
 
-  // decode the token using a secret key-phrase
-  return jwt.verify(token, config.jwtSecret, (err, decoded) => {
-    // the 401 code is for unauthorized status
-    if (err) { return res.status(401).end(); }
+  verify(token, jwtSecret, (err, decoded) => {
+    if (err) {
+      return unauthorized();
+    }
 
-    const userId = decoded.sub;
+    const { sub: userId } = decoded;
 
-    // check if a user exists
-    return User.findById(userId, (userErr, user) => {
-      if (userErr || !user) {
-        return res.status(401).end();
-      }
-      // pass user details onto next route
-      req.user = user;
-      return next();
-    });
+    mongoose.model('User').findById(userId)
+      .then((user) => {
+        if (!user) {
+          return unauthorized();
+        } else {
+          req.user = user;
+          next();
+        }
+      })
+      .catch(() => unauthorized())
+    ;
   });
 };
+
+export default checkAuth;

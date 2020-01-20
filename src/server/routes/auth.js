@@ -1,8 +1,8 @@
-const express = require('express');
-const validator = require('validator');
-const passport = require('passport');
+import { Router } from 'express';
+import passport from 'passport';
+import { isEmail } from 'validator';
 
-const router = new express.Router();
+const router = new Router();
 
 /**
  * Validate the sign up form
@@ -51,7 +51,7 @@ function validateSignInForm(payload) {
 function validateBasicSignInSignUpForm(payload) {
   const errors = {};
 
-  if (!payload || typeof payload.email !== 'string' || !validator.isEmail(payload.email.trim())) {
+  if (!payload || typeof payload.email !== 'string' || !isEmail(payload.email.trim())) {
     errors.email = {
       code: 'INVALID_EMAIL'
     };
@@ -69,19 +69,12 @@ router.post('/signup', (req, res, next) => {
 
   return passport.authenticate('local-signup', (err) => {
     if (err) {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        // the 11000 Mongo code is for a duplication email error
-        return res.json({
-          errors: {
-            email: 'DUPLICATED_EMAIL'
-          }
-        });
-      }
+      const { field, code } = err.name === 'MongoError' && err.code === 11000
+          ? { field: 'email', code: 'DUPLICATED_EMAIL' }
+          : { field: '', code: 'FORM_SUBMISSION_FAILED' };
 
       return res.json({
-        errors: {
-          '': 'FORM_SUBMISSION_FAILED'
-        }
+        errors: { [field]: { code } }
       });
     }
 
@@ -96,7 +89,7 @@ router.post('/signin', (req, res, next) => {
     return res.json({ errors: validationErrors });
   }
 
-  return passport.authenticate('local-login', (error, token, userData) => {
+  return passport.authenticate('local-login', (error, token, user) => {
     if (error !== null) {
       return res.json({
         errors: {
@@ -108,8 +101,8 @@ router.post('/signin', (req, res, next) => {
     return res.json({
       payload: {
         token,
-        user: userData
-      }
+        user,
+      },
     });
   })(req, res, next);
 });

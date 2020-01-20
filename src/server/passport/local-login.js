@@ -1,36 +1,41 @@
-const jwt = require('jsonwebtoken');
-const User = require('mongoose').model('User');
-const PassportLocalStrategy = require('passport-local').Strategy;
-const config = require('../../config');
+import { sign } from 'jsonwebtoken';
+import { Strategy as PassportLocalStrategy } from 'passport-local';
 
-module.exports = new PassportLocalStrategy({
+import { jwtSecret } from '../../config';
+
+const getStrategy = (User) => new PassportLocalStrategy({
   usernameField: 'email',
   passwordField: 'password',
   session: false,
   passReqToCallback: true
 }, (req, email, password, done) => {
-  return User.findOne({ email: email.trim() }, (err, user) => {
-    if (err) {
-      return done({code: 'FORM_SUBMISSION_FAILED', info: err});
-    }
+  try {
+    User.findOne({ email: email.trim() })
+      .then((user) => {
+        if (!user) {
+          return done({code: 'INCORRECT_CREDENTIALS'});
+        }
 
-    if (!user) {
-      return done({code: 'INCORRECT_CREDENTIALS'});
-    }
+        user.comparePassword(password.trim())
+          .then((matched) => {
+            if (!matched) {
+              return done({code: 'INCORRECT_CREDENTIALS'});
+            }
 
-    return user.comparePassword(password.trim(), (passwordErr, isMatch) => {
-      if (passwordErr) {
-        return done({code: 'FORM_SUBMISSION_FAILED', info: passwordErr});
-      }
-
-      if (!isMatch) {
-        return done({code: 'INCORRECT_CREDENTIALS'});
-      }
-
-      return done(null, jwt.sign({ sub: user._id }, config.jwtSecret), {
-        email: user.email,
-        name: user.name
-      });
-    });
-  });
+            done(null, sign({ sub: user._id }, jwtSecret), {
+              email: user.email,
+              name: user.name
+            });
+          })
+          .catch((err) => done({code: 'FORM_SUBMISSION_FAILED', info: err}))
+        ;
+      })
+      .catch((err) => done({code: 'FORM_SUBMISSION_FAILED', info: err}))
+    ;
+  } catch (e) {
+    console.error(e);
+    done({code: 'FORM_SUBMISSION_FAILED', info: e});
+  }
 });
+
+export default getStrategy;
