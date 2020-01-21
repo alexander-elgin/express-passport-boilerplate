@@ -8,30 +8,24 @@ const getStrategy = (User) => new PassportLocalStrategy({
   passwordField: 'password',
   session: false,
   passReqToCallback: true
-}, (req, email, password, done) => {
+}, async (req, email, password, done) => {
   try {
-    User.findOne({ email: email.trim() })
-      .then((user) => {
-        if (!user) {
-          return done({code: 'INCORRECT_CREDENTIALS'});
-        }
+    const user = await User.findOne({ email: email.trim() });
 
-        user.comparePassword(password.trim())
-          .then((matched) => {
-            if (!matched) {
-              return done({code: 'INCORRECT_CREDENTIALS'});
-            }
+    if (!user) {
+      return done({code: 'INCORRECT_CREDENTIALS'});
+    }
 
-            done(null, sign({ sub: user._id }, jwtSecret), {
-              email: user.email,
-              name: user.name
-            });
-          })
-          .catch((err) => done({code: 'FORM_SUBMISSION_FAILED', info: err}))
-        ;
-      })
-      .catch((err) => done({code: 'FORM_SUBMISSION_FAILED', info: err}))
-    ;
+    const matched = await user.comparePassword(password.trim());
+
+    if (!matched) {
+      return done({code: 'INCORRECT_CREDENTIALS'});
+    }
+
+    done(null, sign({ sub: user._id }, jwtSecret), {
+      email: user.email,
+      name: user.name
+    });
   } catch (e) {
     console.error(e);
     done({code: 'FORM_SUBMISSION_FAILED', info: e});

@@ -5,17 +5,20 @@ const getStrategy = (User) => new PassportLocalStrategy({
   passwordField: 'password',
   session: false,
   passReqToCallback: true
-}, (req, email, password, done) => {
+}, async (req, email, password, done) => {
   const newUser = new User({
     email: email.trim(),
     password: password.trim(),
-    name: req.body.name.trim()
+    name: req.body.name.trim(),
   });
 
-  newUser.save()
-    .then(() => done(null))
-    .catch((err) => done(err))
-  ;
+  try {
+    await newUser.save();
+    done(null);
+  } catch (err) {
+    console.error(err);
+    done(err);
+  }
 });
 
 export default getStrategy;

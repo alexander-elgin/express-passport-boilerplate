@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema({
  * @param {string} password
  * @returns {object} callback
  */
-UserSchema.methods.comparePassword = function comparePassword(password) {
+UserSchema.methods.comparePassword = function (password) {
   return compare(password, this.password);
 };
 
@@ -30,25 +30,18 @@ UserSchema.methods.comparePassword = function comparePassword(password) {
 /**
  * The pre-save hook method.
  */
-UserSchema.pre('save', function saveHook(next) {
-  const user = this;
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
 
-  // proceed further only if the password is modified or the user is new
-  if (!user.isModified('password')) return next();
-
-
-  genSalt()
-    .then((salt) => {
-      hash(user.password, salt)
-        .then((hash) => {
-          user.password = hash;
-          next();
-        })
-        .catch(next)
-      ;
-    })
-    .catch(next)
-  ;
+  try {
+    const salt = await genSalt();
+    this.password = await hash(this.password, salt);
+    next();
+  } catch (e) {
+    next(e);
+  }
 });
 
 export default UserSchema;

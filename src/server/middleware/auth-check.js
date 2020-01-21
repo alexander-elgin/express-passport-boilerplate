@@ -12,24 +12,25 @@ const checkAuth = (req, res, next) => {
 
   const token = req.headers.authorization.split(' ')[1];
 
-  verify(token, jwtSecret, (err, decoded) => {
+  verify(token, jwtSecret, async (err, decoded) => {
     if (err) {
       return unauthorized();
     }
 
     const { sub: userId } = decoded;
 
-    mongoose.model('User').findById(userId)
-      .then((user) => {
-        if (!user) {
-          return unauthorized();
-        } else {
-          req.user = user;
-          next();
-        }
-      })
-      .catch(() => unauthorized())
-    ;
+    try {
+      const user = await mongoose.model('User').findById(userId);
+
+      if (!user) {
+        return unauthorized();
+      } else {
+        req.user = user;
+        next();
+      }
+    } catch (e) {
+      unauthorized();
+    }
   });
 };
 
