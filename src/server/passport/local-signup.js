@@ -3,9 +3,8 @@ import {
   genSalt,
   hash,
 } from 'bcryptjs';
-import { promisify } from 'util';
 
-const getStrategy = (connection) => new PassportLocalStrategy({
+const getStrategy = (db) => new PassportLocalStrategy({
   usernameField: 'email',
   passwordField: 'password',
   session: false,
@@ -14,9 +13,13 @@ const getStrategy = (connection) => new PassportLocalStrategy({
   try {
     const salt = await genSalt();
     const hashCode = await hash(password.trim(), salt);
-    const values = [email.trim(), req.body.name.trim(), hashCode];
-    const query = promisify(connection.query).bind(connection);
-    await query(`INSERT INTO users ( email, name, password ) values ("${values.join('", "')}")`);
+
+    await db('users').insert({
+      email: email.trim(),
+      name: req.body.name.trim(),
+      password: hashCode,
+    });
+
     done(null);
   } catch (e) {
     done(e);

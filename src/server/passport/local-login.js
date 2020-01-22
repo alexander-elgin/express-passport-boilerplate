@@ -1,16 +1,15 @@
 import { compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { Strategy as PassportLocalStrategy } from 'passport-local';
-import { promisify } from 'util';
 
-const getStrategy = (connection, { jwtSecret }) => new PassportLocalStrategy({
+const getStrategy = (db, { jwtSecret }) => new PassportLocalStrategy({
   usernameField: 'email',
   passwordField: 'password',
   session: false,
   passReqToCallback: true
 }, async (req, email, password, done) => {
   try {
-    const rows = await promisify(connection.query).bind(connection)(`SELECT * FROM users WHERE email = '${email}'`);
+    const rows = await db('users').where({ email });
 
     if (!rows.length) {
       return done({code: 'INCORRECT_CREDENTIALS'});

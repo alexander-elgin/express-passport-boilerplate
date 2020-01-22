@@ -1,8 +1,8 @@
 import express from 'express';
 import cors  from 'cors';
 import bodyParser from 'body-parser';
+import knex from 'knex';
 import morgan from 'morgan';
-import mysql from 'mysql';
 import nodeCleanup from 'node-cleanup';
 import passport from 'passport';
 
@@ -12,18 +12,14 @@ import authCheckMiddleware from './server/middleware/auth-check';
 import getLocalSignupStrategy from './server/passport/local-signup';
 import getLocalLoginStrategy from './server/passport/local-login';
 
-const connection = mysql.createConnection({
-    host: config.dbHost,
-    database: config.dbName,
-    password: config.dbPassword,
-    user: config.dbUser,
-});
-
-connection.connect(err => {
-    if (err) {
-        console.error('An error occurred while connecting to the DB');
-        throw err
-    }
+const connection = knex({
+    client: 'mysql',
+    connection:{
+        host: config.dbHost,
+        database: config.dbName,
+        password: config.dbPassword,
+        user: config.dbUser,
+    },
 });
 
 const app = express();
@@ -44,7 +40,7 @@ app.listen(app.get('port'), () => console.log(`Server is running on port ${app.g
 
 const shutDown = (exitCode, signal) => {
     console.log(`\nThe server has been stopped with the exit code / signal ${exitCode || signal}`);
-    connection.end();
+    connection.destroy();
 };
 
 nodeCleanup(shutDown);
