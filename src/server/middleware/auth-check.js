@@ -1,24 +1,22 @@
 import { verify } from 'jsonwebtoken';
+import { promisify } from 'util';
 
-const checkAuth = (connection, { jwtSecret }) => (req, res, next) => {
-  if (!req.headers.authorization) {
-    return res.status(401).end();
+const checkAuth = (connection, { jwtSecret }) => async (req, res, next) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    const decoded = await verify(token, jwtSecret);
+    const rows = await promisify(connection.query).bind(connection)(`SELECT * FROM users WHERE _id = '${decoded.sub}'`);
+
+    if (!rows.length) {
+      throw new Error('Unauthorized');
+    }
+
+    req.user = rows.pop();
+    next();
+  } catch (e) {
+    console.error(e);
+    res.status(401).end();
   }
-
-  const token = req.headers.authorization.split(' ')[1];
-
-  verify(token, jwtSecret, (err, decoded) => {
-    if (err) { return res.status(401).end(); }
-
-    connection.query(`SELECT * FROM users WHERE _id = '${decoded.sub}'`, (userErr, rows) => {
-      if (userErr || !rows.length) {
-        return res.status(401).end();
-      }
-
-      req.user = rows.pop();
-      next();
-    });
-  });
 };
 
 export default checkAuth;
