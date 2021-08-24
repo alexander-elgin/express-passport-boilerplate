@@ -1,6 +1,6 @@
 import { Router } from 'express';
+import Joi from 'joi';
 import passport from 'passport';
-import { isEmail } from 'validator';
 
 const router = new Router();
 
@@ -14,13 +14,13 @@ const router = new Router();
 function validateSignUpForm(payload) {
   const errors = validateBasicSignInSignUpForm(payload);
 
-  if (!payload || (typeof payload.name !== 'string') || !/^[a-zA-Z]+([\-\s]?[a-zA-Z]+)*$/.test(payload.name.trim())) {
+  if (!validate(Joi.string().pattern(/^[a-zA-Z]+([\-\s]?[a-zA-Z]+)*$/), payload.name)) {
     errors.name = {
       code: 'INVALID_NAME'
     };
   }
 
-  if (!payload || typeof payload.password !== 'string' || payload.password.trim().length < 8) {
+  if (!validate(Joi.string().min(8), payload.password)) {
     errors.password = {
       code: 'INVALID_PASSWORD'
     };
@@ -39,7 +39,7 @@ function validateSignUpForm(payload) {
 function validateSignInForm(payload) {
   const errors = validateBasicSignInSignUpForm(payload);
 
-  if (!payload || typeof payload.password !== 'string' || payload.password.trim().length === 0) {
+  if (!validate(Joi.string().min(1), payload.password)) {
     errors.password = {
       code: 'EMPTY_PASSWORD'
     };
@@ -51,13 +51,35 @@ function validateSignInForm(payload) {
 function validateBasicSignInSignUpForm(payload) {
   const errors = {};
 
-  if (!payload || typeof payload.email !== 'string' || !isEmail(payload.email.trim())) {
+  if (!validate(Joi.string().email(), payload.email)) {
     errors.email = {
       code: 'INVALID_EMAIL'
     };
   }
 
   return errors;
+}
+
+/**
+ * Validate value
+ *
+ * @param {object} schema - the validation schema
+ * @param {string} value - the tested value
+ * @returns {boolean} The result of validation
+ *
+ */
+function validate(schema, value) {
+  try {
+    const { error } = schema.validate(value.trim());
+
+    if (error !== undefined) {
+      throw new Error(error);
+    }
+  } catch (e) {
+    return false;
+  }
+
+  return true;
 }
 
 router.post('/signup', (req, res, next) => {
