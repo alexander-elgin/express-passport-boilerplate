@@ -30,12 +30,13 @@
     "express": "^4.15.3",
     "joi": "^17.4.2",
     "jsonwebtoken": "^7.4.1",
-    "knex": "^0.20.8",
     "morgan": "^1.9.0",
-    "mysql": "^2.17.1",
     "node-cleanup": "^2.1.2",
     "passport": "^0.3.2",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "pg": "^8.7.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.6.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.3",

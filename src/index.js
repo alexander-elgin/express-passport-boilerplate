@@ -1,7 +1,6 @@
 import express from 'express';
 import cors  from 'cors';
 import bodyParser from 'body-parser';
-import knex from 'knex';
 import morgan from 'morgan';
 import nodeCleanup from 'node-cleanup';
 import passport from 'passport';
@@ -12,13 +11,17 @@ import authCheckMiddleware from './server/middleware/auth-check';
 import getLocalSignupStrategy from './server/passport/local-signup';
 import getLocalLoginStrategy from './server/passport/local-login';
 
-const connection = knex({
-    client: 'mysql',
-    connection:{
-        host: config.dbHost,
-        database: config.dbName,
-        password: config.dbPassword,
-        user: config.dbUser,
+const Sequelize = require('sequelize');
+const connection = new Sequelize(config.dbName, config.dbUser, config.dbPassword, {
+    host: config.dbHost,
+    dialect: 'postgres',
+    operatorsAliases: false,
+
+    pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
     },
 });
 
